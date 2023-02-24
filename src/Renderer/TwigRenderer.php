@@ -4,35 +4,49 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Renderer;
 
-use Psr\Http\Message\ResponseInterface;
-use Slim\Views\Twig;
+use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Views\Twig                    as SlimTwigView;
 
 class TwigRenderer implements RendererInterface
 {
-    private Twig $twig;
+    private SlimTwigView $twig;
 
 
     /**
-     * @param Twig $twig
+     * @param SlimTwigView $twig
      */
-    public function __construct(Twig $twig)
+    public function __construct(SlimTwigView $twig)
     {
         $this->twig = $twig;
     }
 
 
     /**
-     * @param  ResponseInterface    $response
-     * @param  string               $template
-     * @param  array<string, mixed> $data
+     * @param Response $response
+     * @param string $template
+     * @param array<string, mixed> $data
      *
-     * @return ResponseInterface
+     * @return Response
      */
-    public function render(
-        ResponseInterface $response,
+    public function renderToResponse(
+        Response $response,
         string $template,
         array $data = []
-    ): ResponseInterface {
+    ): Response {
         return $this->twig->render($response, $template, $data);
+    }
+
+
+    /**
+     * @param string $template
+     * @param array<string, mixed> $data
+     *
+     * @return string
+     */
+    public function renderToString(
+        string $template,
+        array $data = []
+    ): string {
+        return $this->twig->getEnvironment()->render($template, $data);
     }
 }

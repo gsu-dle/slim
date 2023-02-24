@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Cache;
 
-use Psr\Cache\CacheItemPoolInterface;
+use Psr\Cache\CacheItemPoolInterface as Cache;
 
 interface AppCacheFactoryInterface
 {
-    public function createAppCache(): CacheItemPoolInterface;
+    public function createAppCache(): Cache;
 }

@@ -4,30 +4,31 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Emitter;
 
-use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
-use Psr\Http\Message\ResponseInterface;
+use GAState\Web\Slim\Emitter\ResponseEmitterInterface as ResponseEmitter;
+use Laminas\HttpHandlerRunner\Emitter\SapiEmitter     as LaminasSapiEmitter;
+use Psr\Http\Message\ResponseInterface                as Response;
 
-class LaminasResponseEmitter implements ResponseEmitterInterface
+class LaminasResponseEmitter implements ResponseEmitter
 {
-    protected SapiEmitter $sapiEmitter;
+    protected LaminasSapiEmitter $emitter;
 
 
     /**
-     * @param SapiEmitter $sapiEmitter
+     * @param LaminasSapiEmitter $emitter
      */
-    public function __construct(SapiEmitter $sapiEmitter)
+    public function __construct(LaminasSapiEmitter $emitter)
     {
-        $this->sapiEmitter = $sapiEmitter;
+        $this->emitter = $emitter;
     }
 
 
     /**
-     * @param ResponseInterface $response
+     * @param Response $response
      *
      * @return bool
      */
-    public function emit(ResponseInterface $response): bool
+    public function emit(Response $response): bool
     {
-        return $this->sapiEmitter->emit($response);
+        return $this->emitter->emit($response);
     }
 }

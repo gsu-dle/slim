@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace GAState\Web\Slim\Error;
 
 use GAState\Web\Slim\Emitter\ResponseEmitterInterface as ResponseEmitter;
-use GAState\Web\Slim\Error\ErrorHandler as ErrorHandler;
-use GAState\Web\Slim\Exception\ShutdownException as ShutdownException;
-use Psr\Http\Message\ServerRequestInterface as PsrRequest;
+use GAState\Web\Slim\Error\ErrorHandler               as ErrorHandler;
+use GAState\Web\Slim\Exception\ShutdownException      as ShutdownException;
+use Psr\Http\Message\ServerRequestInterface           as Request;
 
 class ShutdownHandler
 {
-    protected PsrRequest $request;
+    protected Request $request;
     protected ErrorHandler $errorHandler;
     protected ResponseEmitter $responseEmitter;
     protected bool $displayErrorDetails;
@@ -20,7 +20,7 @@ class ShutdownHandler
 
 
     /**
-     * @param PsrRequest $request
+     * @param Request $request
      * @param ErrorHandler $errorHandler
      * @param ResponseEmitter $responseEmitter
      * @param bool $displayErrorDetails
@@ -28,7 +28,7 @@ class ShutdownHandler
      * @param bool $logErrorDetails
      */
     public function __construct(
-        PsrRequest $request,
+        Request $request,
         ErrorHandler $errorHandler,
         ResponseEmitter $responseEmitter,
         bool $displayErrorDetails,

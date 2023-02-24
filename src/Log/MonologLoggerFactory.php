@@ -4,34 +4,68 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Log;
 
-use RuntimeException;
-use GAState\Web\Slim\Env;
-use Monolog\Handler\StreamHandler;
-use Monolog\Level;
-use Monolog\Logger;
-use Monolog\Processor\UidProcessor;
-use Psr\Log\LoggerInterface;
+use GAState\Web\Slim\Log\LoggerFactoryInterface as LoggerFactory;
+use RuntimeException                            as RuntimeException;
+use Monolog\Formatter\LineFormatter             as MonologLineFormatter;
+use Monolog\Handler\StreamHandler               as MonologStreamHandler;
+use Monolog\Level                               as MonologLevel;
+use Monolog\Logger                              as MonologLogger;
+use Monolog\Processor\ProcessIdProcessor        as MonologProcessIdProcessor;
+use Monolog\Processor\UidProcessor              as MonologUidProcessor;
+use Monolog\Processor\WebProcessor              as MonologWebProcessor;
+use Psr\Http\Message\ServerRequestInterface     as Request;
+use Psr\Log\LoggerInterface                     as Logger;
 
-class MonologLoggerFactory implements LoggerFactoryInterface
+class MonologLoggerFactory implements LoggerFactory
 {
+    private string $logName;
+    private string $logFile;
+    private string $logLevel;
+    private Request $request;
+
+
     /**
-     * @return LoggerInterface
+     * @param string $logName
+     * @param string $logFile
+     * @param string $logLevel
+     * @param Request $request
      */
-    public function createLogger(): LoggerInterface
+    public function __construct(
+        string $logName,
+        string $logFile,
+        string $logLevel,
+        Request $request
+    ) {
+        $this->logName = $logName;
+        $this->logFile = $logFile;
+        $this->logLevel = $logLevel;
+        $this->request = $request;
+    }
+
+
+    /**
+     * @return Logger
+     */
+    public function createLogger(): Logger
     {
-        $logName = Env::getString(Env::LOG_NAME);
-        $logFile = Env::getString(Env::LOG_FILE);
-        $logLevel = Env::getString(Env::LOG_LEVEL);
-        if (!in_array($logLevel, Level::NAMES, true)) {
-            throw new RuntimeException("Invalid log level: '{$logLevel}'");
+        if (!in_array($this->logLevel, MonologLevel::NAMES, true)) {
+            throw new RuntimeException("Invalid log level: '{$this->logLevel}'");
         }
 
-        $logger = new Logger($logName);
-        $processor = new UidProcessor();
-        $handler = new StreamHandler($logFile, $logLevel);
+        $logger = new MonologLogger($this->logName);
+        $handler = new MonologStreamHandler($this->logFile, $this->logLevel);
+        $handler->setFormatter(new MonologLineFormatter(
+            format: "[%datetime%] [%channel%:%level_name%] %message% %context% %extra%\n",
+            dateFormat: null,
+            allowInlineLineBreaks: true,
+            ignoreEmptyContextAndExtra: true,
+            includeStacktraces: false
+        ));
 
         return $logger
-            ->pushProcessor($processor)
+            ->pushProcessor(new MonologWebProcessor($this->request->getServerParams()))
+            ->pushProcessor(new MonologProcessIdProcessor())
+            ->pushProcessor(new MonologUidProcessor())
             ->pushHandler($handler);
     }
 }

@@ -4,20 +4,32 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Renderer;
 
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ResponseInterface as Response;
 
 interface RendererInterface
 {
     /**
-     * @param  ResponseInterface    $response
-     * @param  string               $template
-     * @param  array<string, mixed> $data
+     * @param Response $response
+     * @param string $template
+     * @param array<string, mixed> $data
      *
-     * @return ResponseInterface
+     * @return Response
      */
-    public function render(
-        ResponseInterface $response,
+    public function renderToResponse(
+        Response $response,
         string $template,
         array $data = []
-    ): ResponseInterface;
+    ): Response;
+
+
+    /**
+     * @param string $template
+     * @param array<string, mixed> $data
+     *
+     * @return string
+     */
+    public function renderToString(
+        string $template,
+        array $data = []
+    ): string;
 }

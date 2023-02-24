@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim;
 
-use DI\Attribute\Inject;
+use DI\Attribute\Inject                               as Inject;
 use GAState\Web\Slim\Emitter\ResponseEmitterInterface as ResponseEmitter;
 use GAState\Web\Slim\Error\ShutdownHandler            as ShutdownHandler;
 use GAState\Web\Slim\Middleware\ErrorMiddleware       as ErrorMiddleware;
 use GAState\Web\Slim\Middleware\SessionMiddleware     as SessionMiddleware;
-use Psr\Http\Message\ServerRequestInterface           as PsrServerRequest;
-use Psr\Http\Message\ResponseInterface                as PsrResponse;
-use Psr\Http\Server\MiddlewareInterface               as PsrMiddleware;
+use Psr\Http\Message\ServerRequestInterface           as Request;
+use Psr\Http\Message\ResponseInterface                as Response;
+use Psr\Http\Server\MiddlewareInterface               as Middleware;
 use Slim\App                                          as SlimApp;
 use Slim\Interfaces\RouteCollectorProxyInterface      as SlimRouteContainer;
 use Slim\Middleware\BodyParsingMiddleware             as SlimBodyParsingMiddleware;
@@ -22,7 +22,7 @@ abstract class App
 {
     private SlimApp $slimApp;
     private ShutdownHandler $shutdownHandler;
-    private PsrServerRequest $request;
+    private Request $request;
     private ResponseEmitter $responseEmitter;
 
     #[Inject]
@@ -40,13 +40,13 @@ abstract class App
     /**
      * @param SlimApp $slimApp
      * @param ShutdownHandler $shutdownHandler
-     * @param PsrServerRequest $request
+     * @param Request $request
      * @param ResponseEmitter $responseEmitter
      */
     public function __construct(
         SlimApp $slimApp,
         ShutdownHandler $shutdownHandler,
-        PsrServerRequest $request,
+        Request $request,
         ResponseEmitter $responseEmitter
     ) {
         $this->slimApp = $slimApp;
@@ -97,14 +97,14 @@ abstract class App
 
 
     /**
-     * @param array<string, PsrMiddleware|null> $middleware
+     * @param array<string,Middleware|null> $middleware
      *
      * @return void
      */
     protected function loadMiddleware(array $middleware): void
     {
         foreach ($middleware as $mw) {
-            if ($mw instanceof PsrMiddleware) {
+            if ($mw instanceof Middleware) {
                 $this->slimApp->addMiddleware($mw);
             }
         }
@@ -120,22 +120,22 @@ abstract class App
 
 
     /**
-     * @param PsrServerRequest $request
+     * @param Request $request
      *
-     * @return PsrResponse
+     * @return Response
      */
-    protected function handle(PsrServerRequest $request): PsrResponse
+    protected function handle(Request $request): Response
     {
         return $this->slimApp->handle($request);
     }
 
 
     /**
-     * @param PsrResponse $response
+     * @param Response $response
      *
      * @return void
      */
-    protected function emit(PsrResponse $response): void
+    protected function emit(Response $response): void
     {
         $this->responseEmitter->emit($response);
     }

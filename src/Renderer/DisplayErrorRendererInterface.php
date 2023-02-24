@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Renderer;
 
-use Slim\Interfaces\ErrorRendererInterface;
+use GAState\Web\Slim\Renderer\RendererInterface as Renderer;
+use Slim\Interfaces\ErrorRendererInterface      as SlimErrorRenderer;
 
-interface DisplayErrorRendererInterface extends ErrorRendererInterface
+interface DisplayErrorRendererInterface extends Renderer, SlimErrorRenderer
 {
 }

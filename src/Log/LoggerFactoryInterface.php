@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Log;
 
-use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerInterface as Logger;
 
 interface LoggerFactoryInterface
 {
     /**
-     * @return LoggerInterface
+     * @return Logger
      */
-    public function createLogger(): LoggerInterface;
+    public function createLogger(): Logger;
 }

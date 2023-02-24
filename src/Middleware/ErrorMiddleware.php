@@ -4,14 +4,7 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Middleware;
 
-use DI\Attribute\Inject;
-// PSR interfaces
-use Psr\Http\Message\ResponseInterface        as PsrResponse;
-use Psr\Http\Message\ResponseFactoryInterface as PsrResponseFactory;
-use Psr\Http\Message\ServerRequestInterface   as PsrServerRequest;
-use Psr\Http\Server\RequestHandlerInterface   as PsrRequestHandler;
-use Psr\Log\LoggerInterface                   as PsrLogger;
-// GSU error handlers
+use DI\Attribute\Inject                                   as Inject;
 use GAState\Web\Slim\Error\ErrorHandler                   as ErrorHandler;
 use GAState\Web\Slim\Error\HttpBadRequestHandler          as BadRequestHandler;
 use GAState\Web\Slim\Error\HttpForbiddenHandler           as ForbiddenHandler;
@@ -20,18 +13,21 @@ use GAState\Web\Slim\Error\HttpMethodNotAllowedHandler    as MethodNotAllowedHan
 use GAState\Web\Slim\Error\HttpNotFoundHandler            as NotFoundHandler;
 use GAState\Web\Slim\Error\HttpNotImplementedHandler      as NotImplementedHandler;
 use GAState\Web\Slim\Error\HttpUnauthorizedHandler        as UnauthorizedHandler;
-// Slim exceptions
-use Slim\Exception\HttpBadRequestException          as BadRequestException;
-use Slim\Exception\HttpForbiddenException           as ForbiddenException;
-use Slim\Exception\HttpInternalServerErrorException as InternalServerErrorException;
-use Slim\Exception\HttpMethodNotAllowedException    as MethodNotAllowedException;
-use Slim\Exception\HttpNotFoundException            as NotFoundException;
-use Slim\Exception\HttpNotImplementedException      as NotImplementedException;
-use Slim\Exception\HttpUnauthorizedException        as UnauthorizedException;
-// Slim
-use Slim\Interfaces\CallableResolverInterface as SlimCallableResolver;
-use Slim\Interfaces\ErrorHandlerInterface     as SlimErrorHandler;
-use Slim\Middleware\ErrorMiddleware           as SlimErrorMiddleware;
+use Psr\Http\Message\ResponseInterface                    as Response;
+use Psr\Http\Message\ResponseFactoryInterface             as ResponseFactory;
+use Psr\Http\Message\ServerRequestInterface               as Request;
+use Psr\Http\Server\RequestHandlerInterface               as RequestHandler;
+use Psr\Log\LoggerInterface                               as Logger;
+use Slim\Exception\HttpBadRequestException                as SlimBadRequestException;
+use Slim\Exception\HttpForbiddenException                 as SlimForbiddenException;
+use Slim\Exception\HttpInternalServerErrorException       as SlimInternalServerErrorException;
+use Slim\Exception\HttpMethodNotAllowedException          as SlimMethodNotAllowedException;
+use Slim\Exception\HttpNotFoundException                  as SlimNotFoundException;
+use Slim\Exception\HttpNotImplementedException            as SlimNotImplementedException;
+use Slim\Exception\HttpUnauthorizedException              as SlimUnauthorizedException;
+use Slim\Interfaces\CallableResolverInterface             as SlimCallableResolver;
+use Slim\Interfaces\ErrorHandlerInterface                 as SlimErrorHandler;
+use Slim\Middleware\ErrorMiddleware                       as SlimErrorMiddleware;
 
 class ErrorMiddleware extends SlimErrorMiddleware
 {
@@ -70,19 +66,19 @@ class ErrorMiddleware extends SlimErrorMiddleware
 
     /**
      * @param SlimCallableResolver $callableResolver
-     * @param PsrResponseFactory $responseFactory
+     * @param ResponseFactory $responseFactory
      * @param bool $displayErrorDetails
      * @param bool $logErrors
      * @param bool $logErrorDetails
-     * @param PsrLogger $logger
+     * @param Logger $logger
      */
     public function __construct(
         SlimCallableResolver $callableResolver,
-        PsrResponseFactory $responseFactory,
+        ResponseFactory $responseFactory,
         bool $displayErrorDetails,
         bool $logErrors,
         bool $logErrorDetails,
-        PsrLogger $logger
+        Logger $logger
     ) {
         parent::__construct(
             $callableResolver,
@@ -96,25 +92,25 @@ class ErrorMiddleware extends SlimErrorMiddleware
 
 
     /**
-     * @param PsrServerRequest $request
-     * @param PsrRequestHandler $requestHandler
+     * @param Request $request
+     * @param RequestHandler $requestHandler
      *
-     * @return PsrResponse
+     * @return Response
      */
     public function process(
-        PsrServerRequest $request,
-        PsrRequestHandler $requestHandler
-    ): PsrResponse {
+        Request $request,
+        RequestHandler $requestHandler
+    ): Response {
         $defaultErrorHandler = $this->getDefaultErrorHandler();
 
         $this->handlers = array_merge([
-            BadRequestException::class          => $this->badRequestHandler          ?? $defaultErrorHandler,
-            UnauthorizedException::class        => $this->unauthorizedHandler        ?? $defaultErrorHandler,
-            ForbiddenException::class           => $this->forbiddenHandler           ?? $defaultErrorHandler,
-            NotFoundException::class            => $this->notFoundHandler            ?? $defaultErrorHandler,
-            MethodNotAllowedException::class    => $this->methodNotAllowedHandler    ?? $defaultErrorHandler,
-            InternalServerErrorException::class => $this->internalServerErrorHandler ?? $defaultErrorHandler,
-            NotImplementedException::class      => $this->notImplementedHandler      ?? $defaultErrorHandler,
+            SlimBadRequestException::class          => $this->badRequestHandler          ?? $defaultErrorHandler,
+            SlimUnauthorizedException::class        => $this->unauthorizedHandler        ?? $defaultErrorHandler,
+            SlimForbiddenException::class           => $this->forbiddenHandler           ?? $defaultErrorHandler,
+            SlimNotFoundException::class            => $this->notFoundHandler            ?? $defaultErrorHandler,
+            SlimMethodNotAllowedException::class    => $this->methodNotAllowedHandler    ?? $defaultErrorHandler,
+            SlimInternalServerErrorException::class => $this->internalServerErrorHandler ?? $defaultErrorHandler,
+            SlimNotImplementedException::class      => $this->notImplementedHandler      ?? $defaultErrorHandler,
         ], $this->handlers);
 
         return parent::process($request, $requestHandler);

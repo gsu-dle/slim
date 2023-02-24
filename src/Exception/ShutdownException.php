@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Exception;
 
-use Psr\Http\Message\ServerRequestInterface as PsrServerRequest;
-use Slim\Exception\HttpInternalServerErrorException;
-use Throwable;
+use Psr\Http\Message\ServerRequestInterface         as Request;
+use Slim\Exception\HttpInternalServerErrorException as HttpServerError;
+use Throwable                                       as Throwable;
 
-class ShutdownException extends HttpInternalServerErrorException
+class ShutdownException extends HttpServerError
 {
     /**
      * @var array<string,string|int>|null $error
@@ -20,12 +20,12 @@ class ShutdownException extends HttpInternalServerErrorException
     public readonly int $errorType;
 
     /**
-     * @param PsrServerRequest $request
+     * @param Request $request
      * @param string|null      $message
      * @param Throwable|null   $previous
      */
     public function __construct(
-        PsrServerRequest $request,
+        Request $request,
         ?string $message = null,
         ?Throwable $previous = null
     ) {

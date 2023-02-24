@@ -4,44 +4,35 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim;
 
-use Dotenv\Dotenv;
-use RuntimeException;
+use Dotenv\Dotenv    as Dotenv;
+use RuntimeException as RuntimeException;
 
 class Env
 {
-    public const BASE_URI = 'BASE_URI';
-    public const BASE_DIR = 'BASE_DIR';
-    public const WORK_DIR = 'WORK_DIR';
-    public const APP_DIR  = 'APP_DIR';
-    public const SLIM_DIR = 'SLIM_DIR';
-
-    public const DI_DEF_FILE = 'DI_DEF_FILE';
-    public const DI_CMPL_DIR = 'DI_CMPL_DIR';
-    public const DI_PRXY_DIR = 'DI_PRXY_DIR';
-
-    public const LOG_DIR   = 'LOG_DIR';
-    public const LOG_NAME  = 'LOG_NAME';
-    public const LOG_FILE  = 'LOG_FILE';
-    public const LOG_LEVEL = 'LOG_LEVEL';
-
+    public const BASE_URI              = 'BASE_URI';
+    public const BASE_DIR              = 'BASE_DIR';
+    public const WORK_DIR              = 'WORK_DIR';
+    public const APP_DIR               = 'APP_DIR';
+    public const SLIM_DIR              = 'SLIM_DIR';
+    public const DI_DEF_FILE           = 'DI_DEF_FILE';
+    public const DI_CMPL_DIR           = 'DI_CMPL_DIR';
+    public const DI_PRXY_DIR           = 'DI_PRXY_DIR';
+    public const LOG_DIR               = 'LOG_DIR';
+    public const LOG_NAME              = 'LOG_NAME';
+    public const LOG_FILE              = 'LOG_FILE';
+    public const LOG_LEVEL             = 'LOG_LEVEL';
     public const SLIM_DISP_ERR_DETAILS = 'SLIM_DISP_ERR_DETAILS';
     public const SLIM_LOG_ERR          = 'SLIM_LOG_ERR';
     public const SLIM_LOG_ERR_DETAILS  = 'SLIM_LOG_ERR_DETAILS';
+    public const APP_CACHE_DIR         = 'APP_CACHE_DIR';
+    public const SLIM_TMPL_DIR         = 'SLIM_TMPL_DIR';
+    public const TMPL_DIR              = 'TMPL_DIR';
+    public const TMPL_CACHE_DIR        = 'TMPL_CACHE_DIR';
+    public const SERVER_PREFIX         = 'SERVER_OPT';
+    public const SESSION_PREFIX        = 'SESSION_OPT';
+    public const TWIG_PREFIX           = 'TWIG_OPT';
 
-    public const SESSION_CACHE_NAME = 'SESSION_CACHE_NAME';
-    public const APP_CACHE_NAME     = 'APP_CACHE_NAME';
-    public const APP_CACHE_DIR      = 'APP_CACHE_DIR';
-
-    public const SLIM_TMPL_DIR  = 'SLIM_TMPL_DIR';
-    public const TMPL_DIR       = 'TMPL_DIR';
-    public const TMPL_CACHE_DIR = 'TMPL_CACHE_DIR';
-
-    public const SERVER_PREFIX  = 'SERVER_OPT';
-    public const SESSION_PREFIX = 'SESSION_OPT';
-    public const TWIG_PREFIX = 'TWIG_OPT';
-
-
-    private static bool $envLoaded = false;
+    protected static bool $envLoaded = false;
 
 
     /**
@@ -50,11 +41,11 @@ class Env
      *
      * @return void
      */
-    public static function load(
+    final public static function load(
         string $baseDir,
         string $baseURI
     ): void {
-        if (self::$envLoaded) {
+        if (static::$envLoaded) {
             return;
         }
 
@@ -65,7 +56,7 @@ class Env
 
         (Dotenv::createImmutable($baseDir))->load();
 
-        $server = self::getValues(self::SERVER_PREFIX);
+        $server = static::getValues(static::SERVER_PREFIX);
         foreach ($server as $name => $value) {
             $_SERVER[$name] = $value;
         }
@@ -74,34 +65,67 @@ class Env
             $baseURI = substr($baseURI, 0, -1);
         }
 
-        $_ENV[self::BASE_DIR] = $baseDir;
-        $_ENV[self::BASE_URI] = $baseURI;
-        $_ENV[self::WORK_DIR] = $workDir = self::getString(self::WORK_DIR, "{$baseDir}/work");
-        $_ENV[self::APP_DIR]  = $appDir = self::getString(self::APP_DIR, "{$baseDir}/src");
-        $_ENV[self::SLIM_DIR] = $slimDir = self::getString(self::SLIM_DIR, __DIR__);
+        static::setString(static::BASE_DIR, $baseDir);
+        static::setString(static::BASE_URI, $baseURI);
 
-        $_ENV[self::DI_DEF_FILE] = self::getString(self::DI_DEF_FILE, "{$appDir}/Dependencies.php");
-        $_ENV[self::DI_CMPL_DIR] = self::getString(self::DI_CMPL_DIR, "{$workDir}/php-di");
-        $_ENV[self::DI_PRXY_DIR] = self::getString(self::DI_PRXY_DIR, "{$workDir}/php-di/proxies");
+        static::setDefaults();
 
-        $_ENV[self::LOG_DIR]   = $logDir = self::getString(self::LOG_DIR, "{$baseDir}/logs");
-        $_ENV[self::LOG_NAME]  = $logName = self::getString(self::LOG_NAME, "Slim");
-        $_ENV[self::LOG_FILE]  = self::getString(self::LOG_FILE, "{$logDir}/{$logName}.log");
-        $_ENV[self::LOG_LEVEL] = self::getString(self::LOG_LEVEL, "ERROR");
+        static::$envLoaded = true;
+    }
 
-        $_ENV[self::SLIM_DISP_ERR_DETAILS] = self::getBool(self::SLIM_DISP_ERR_DETAILS, false);
-        $_ENV[self::SLIM_LOG_ERR]          = self::getBool(self::SLIM_LOG_ERR, true);
-        $_ENV[self::SLIM_LOG_ERR_DETAILS]  = self::getBool(self::SLIM_LOG_ERR_DETAILS, false);
 
-        $_ENV[self::SESSION_CACHE_NAME] = self::getString(self::SESSION_CACHE_NAME, 'SESSION_CACHE');
-        $_ENV[self::APP_CACHE_NAME]     = self::getString(self::APP_CACHE_NAME, 'APP_CACHE');
-        $_ENV[self::APP_CACHE_DIR]      = self::getString(self::APP_CACHE_DIR, "{$workDir}/app-cache");
+    protected static function setDefaults(): void
+    {
+        $baseDir = static::getString(static::BASE_DIR);
+        $slimDir = static::setString(static::SLIM_DIR, __DIR__);
+        $workDir = static::setString(static::WORK_DIR, "{$baseDir}/work");
+        $appDir  = static::setString(static::APP_DIR, "{$baseDir}/src");
+        $logDir  = static::setString(static::LOG_DIR, "{$baseDir}/logs");
+        $logName = static::setString(static::LOG_NAME, "Slim");
 
-        $_ENV[self::TMPL_DIR]       = self::getString(self::TMPL_DIR, "{$baseDir}/templates");
-        $_ENV[self::SLIM_TMPL_DIR]  = self::getString(self::SLIM_TMPL_DIR, $slimDir . '/../templates');
-        $_ENV[self::TMPL_CACHE_DIR] = self::getString(self::TMPL_DIR, "{$workDir}/templates");
+        static::setString(static::DI_DEF_FILE, "{$appDir}/Dependencies.php");
+        static::setString(static::DI_CMPL_DIR, "{$workDir}/php-di");
+        static::setString(static::DI_PRXY_DIR, "{$workDir}/php-di/proxies");
+        static::setString(static::LOG_FILE, "{$logDir}/{$logName}.log");
+        static::setString(static::LOG_LEVEL, "ERROR");
+        static::setBool(static::SLIM_DISP_ERR_DETAILS, false);
+        static::setBool(static::SLIM_LOG_ERR, true);
+        static::setBool(static::SLIM_LOG_ERR_DETAILS, false);
+        static::setString(static::APP_CACHE_DIR, "{$workDir}/app-cache");
+        static::setString(static::TMPL_DIR, "{$baseDir}/templates");
+        static::setString(static::SLIM_TMPL_DIR, "{$slimDir}/../templates");
+        static::setString(static::TMPL_CACHE_DIR, "{$workDir}/templates");
+    }
 
-        self::$envLoaded = true;
+
+    protected static function set(string $name, mixed $value): mixed
+    {
+        $_ENV[$name] = $value;
+        return $value;
+    }
+
+
+    protected static function setString(string $name, string $default = ""): string
+    {
+        /** @var string $value */
+        $value = static::set($name, static::getString($name, $default));
+        return $value;
+    }
+
+
+    protected static function setInt(string $name, int $default = 0): int
+    {
+        /** @var int $value */
+        $value = static::set($name, static::getInt($name, $default));
+        return $value;
+    }
+
+
+    protected static function setBool(string $name, bool $default = false): bool
+    {
+        /** @var bool $value */
+        $value = static::set($name, static::getBool($name, $default));
+        return $value;
     }
 
 
@@ -127,7 +151,7 @@ class Env
      */
     public static function getString(string $name, string $default = ''): string
     {
-        return strval(self::get($name, $default));
+        return strval(static::get($name, $default));
     }
 
 
@@ -139,7 +163,7 @@ class Env
      */
     public static function getInt(string $name, int $default = 0): int
     {
-        return intval(self::get($name, $default));
+        return intval(static::get($name, $default));
     }
 
 
@@ -151,7 +175,7 @@ class Env
      */
     public static function getBool(string $name, bool $default = false): bool
     {
-        $strVal = strtolower(self::getString($name, $default ? '1' : '0'));
+        $strVal = strtolower(static::getString($name, $default ? '1' : '0'));
         return in_array($strVal, ['1', 'y', 'yes', 't', 'true', 'on'], true);
     }
 

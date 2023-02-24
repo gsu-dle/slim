@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Error;
 
-use DI\Attribute\Inject;
+use DI\Attribute\Inject                                     as Inject;
 use GAState\Web\Slim\Renderer\DisplayErrorRendererInterface as DisplayErrorRenderer;
 use GAState\Web\Slim\Renderer\LogErrorRendererInterface     as LogErrorRenderer;
-use Psr\Http\Message\ResponseFactoryInterface               as PsrResponseFactory;
-use Psr\Log\LoggerInterface                                 as PsrLogger;
+use Psr\Http\Message\ResponseFactoryInterface               as ResponseFactory;
+use Psr\Log\LoggerInterface                                 as Logger;
 use Slim\Handlers\ErrorHandler                              as SlimErrorHandler;
 use Slim\Interfaces\CallableResolverInterface               as SlimCallableResolver;
 
@@ -23,13 +23,13 @@ class ErrorHandler extends SlimErrorHandler
 
     /**
      * @param SlimCallableResolver $callableResolver
-     * @param PsrResponseFactory $responseFactory
-     * @param PsrLogger $logger
+     * @param ResponseFactory $responseFactory
+     * @param Logger $logger
      */
     public function __construct(
         SlimCallableResolver $callableResolver,
-        PsrResponseFactory $responseFactory,
-        PsrLogger $logger
+        ResponseFactory $responseFactory,
+        Logger $logger
     ) {
         parent::__construct($callableResolver, $responseFactory, $logger);
     }
@@ -42,6 +42,11 @@ class ErrorHandler extends SlimErrorHandler
     {
         $renderer = $this->callableResolver->resolve($this->logErrorRenderer);
         $error = $renderer($this->exception, $this->logErrorDetails);
-        $this->logger->error($error);
+
+        if ($this->logErrorDetails) {
+            $this->logger->error($error, ['trace' => $this->exception->getTrace()]);
+        } else {
+            $this->logger->error($error);
+        }
     }
 }
