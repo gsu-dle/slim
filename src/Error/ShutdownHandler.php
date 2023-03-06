@@ -62,6 +62,10 @@ class ShutdownHandler
             $this->logErrorDetails
         );
 
+        if (ob_get_level() > 0 && ob_get_length() > 0) {
+            ob_clean();
+        }
+
         $this->responseEmitter->emit($response);
     }
 }
