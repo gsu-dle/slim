@@ -8,7 +8,7 @@ use GAState\Web\Slim\Cache\AppCacheFactoryInterface   as AppCacheFactory;
 use Psr\Cache\CacheItemPoolInterface                  as Cache;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter as FilesystemAdapter;
 
-class SymfonyAppCacheFactory implements AppCacheFactory
+class FileAppCacheFactory implements AppCacheFactory
 {
     private string $appCacheDir;
 
@@ -23,10 +23,18 @@ class SymfonyAppCacheFactory implements AppCacheFactory
 
 
     /**
+     * @param string $namespace
+     * @param int $defaultLifetime
      * @return Cache
      */
-    public function createAppCache(): Cache
-    {
-        return new FilesystemAdapter(directory: $this->appCacheDir);
+    public function createAppCache(
+        string $namespace = '',
+        int $defaultLifetime = 0
+    ): Cache {
+        return new FilesystemAdapter(
+            directory: $this->appCacheDir,
+            namespace: $namespace,
+            defaultLifetime: $defaultLifetime,
+        );
     }
 }

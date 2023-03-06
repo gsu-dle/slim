@@ -16,7 +16,7 @@ use Monolog\Processor\WebProcessor              as MonologWebProcessor;
 use Psr\Http\Message\ServerRequestInterface     as Request;
 use Psr\Log\LoggerInterface                     as Logger;
 
-class MonologLoggerFactory implements LoggerFactory
+class FileLoggerFactory implements LoggerFactory
 {
     private string $logName;
     private string $logFile;

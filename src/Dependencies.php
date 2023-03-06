@@ -8,13 +8,13 @@ use GAState\Web\Slim\Env                                    as Env;
 use GAState\Web\Slim\SlimAppFactory                         as DefaultSlimAppFactory;
 use GAState\Web\Slim\SlimAppFactoryInterface                as SlimAppFactory;
 use GAState\Web\Slim\Cache\AppCacheFactoryInterface         as AppCacheFactory;
-use GAState\Web\Slim\Cache\SymfonyAppCacheFactory           as DefaultAppCacheFactory;
+use GAState\Web\Slim\Cache\FileAppCacheFactory              as DefaultAppCacheFactory;
 use GAState\Web\Slim\Emitter\LaminasResponseEmitter         as DefaultResponseEmitter;
 use GAState\Web\Slim\Emitter\ResponseEmitterInterface       as ResponseEmitter;
 use GAState\Web\Slim\Error\ErrorHandler                     as DefaultErrorHandler;
 use GAState\Web\Slim\Error\ShutdownHandler                  as DefaultShutdownHandler;
 use GAState\Web\Slim\Log\LoggerFactoryInterface             as LoggerFactory;
-use GAState\Web\Slim\Log\MonologLoggerFactory               as DefaultLoggerFactory;
+use GAState\Web\Slim\Log\FileLoggerFactory                  as DefaultLoggerFactory;
 use GAState\Web\Slim\Middleware\ErrorMiddleware             as DefaultErrorMiddleware;
 use GAState\Web\Slim\Renderer\DisplayErrorRenderer          as DefaultDisplayErrorRenderer;
 use GAState\Web\Slim\Renderer\DisplayErrorRendererInterface as DisplayErrorRenderer;
@@ -109,7 +109,9 @@ return (function () {
     ];
 
     $psrDeps = [
-        PsrCache::class                => \DI\factory([AppCacheFactory::class, 'createAppCache']),
+        PsrCache::class                => \DI\factory([AppCacheFactory::class, 'createAppCache'])
+            ->parameter('namespace', '')
+            ->parameter('defaultLifetime', 0),
         PsrHttpClient::class           => \DI\get(GuzzleHttpClient::class),
         PsrLogger::class               => \DI\factory([LoggerFactory::class, 'createLogger']),
         PsrRequestFactory::class       => \DI\get(LaminasRequestFactory::class),
