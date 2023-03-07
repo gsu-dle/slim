@@ -9,11 +9,11 @@ use RuntimeException as RuntimeException;
 
 class Env
 {
-    public const BASE_URI              = 'BASE_URI';
-    public const BASE_DIR              = 'BASE_DIR';
-    public const WORK_DIR              = 'WORK_DIR';
+    public const APP_CACHE_DIR         = 'APP_CACHE_DIR';
     public const APP_DIR               = 'APP_DIR';
-    public const SLIM_DIR              = 'SLIM_DIR';
+    public const BASE_DIR              = 'BASE_DIR';
+    public const BASE_URI              = 'BASE_URI';
+    public const DI_ENABLE_CMPL        = 'DI_ENABLE_CMPL';
     public const DI_DEF_FILE           = 'DI_DEF_FILE';
     public const DI_CMPL_DIR           = 'DI_CMPL_DIR';
     public const DI_PRXY_DIR           = 'DI_PRXY_DIR';
@@ -21,16 +21,21 @@ class Env
     public const LOG_NAME              = 'LOG_NAME';
     public const LOG_FILE              = 'LOG_FILE';
     public const LOG_LEVEL             = 'LOG_LEVEL';
+    public const PDO_DSN               = 'PDO_DSN';
+    public const PDO_USERNAME          = 'PDO_USERNAME';
+    public const PDO_PASSWORD          = 'PDO_PASSWORD';
+    public const SERVER_PREFIX         = 'SERVER_OPT';
+    public const SESSION_PREFIX        = 'SESSION_OPT';
+    public const SLIM_DIR              = 'SLIM_DIR';
     public const SLIM_DISP_ERR_DETAILS = 'SLIM_DISP_ERR_DETAILS';
     public const SLIM_LOG_ERR          = 'SLIM_LOG_ERR';
     public const SLIM_LOG_ERR_DETAILS  = 'SLIM_LOG_ERR_DETAILS';
-    public const APP_CACHE_DIR         = 'APP_CACHE_DIR';
     public const SLIM_TMPL_DIR         = 'SLIM_TMPL_DIR';
-    public const TMPL_DIR              = 'TMPL_DIR';
     public const TMPL_CACHE_DIR        = 'TMPL_CACHE_DIR';
-    public const SERVER_PREFIX         = 'SERVER_OPT';
-    public const SESSION_PREFIX        = 'SESSION_OPT';
+    public const TMPL_DIR              = 'TMPL_DIR';
     public const TWIG_PREFIX           = 'TWIG_OPT';
+    public const WORK_DIR              = 'WORK_DIR';
+
 
     protected static bool $envLoaded = false;
 
@@ -77,12 +82,14 @@ class Env
     protected static function setDefaults(): void
     {
         $baseDir = static::getString(static::BASE_DIR);
-        $slimDir = static::setString(static::SLIM_DIR, __DIR__);
-        $workDir = static::setString(static::WORK_DIR, "{$baseDir}/work");
         $appDir  = static::setString(static::APP_DIR, "{$baseDir}/src");
         $logDir  = static::setString(static::LOG_DIR, "{$baseDir}/logs");
-        $logName = static::setString(static::LOG_NAME, "Slim");
+        $logName = static::setString(static::LOG_NAME, "app");
+        $slimDir = static::setString(static::SLIM_DIR, __DIR__);
+        $workDir = static::setString(static::WORK_DIR, "{$baseDir}/work");
 
+        static::setString(static::APP_CACHE_DIR, "{$workDir}/app-cache");
+        static::setBool(static::DI_ENABLE_CMPL, false);
         static::setString(static::DI_DEF_FILE, "{$appDir}/Dependencies.php");
         static::setString(static::DI_CMPL_DIR, "{$workDir}/php-di");
         static::setString(static::DI_PRXY_DIR, "{$workDir}/php-di/proxies");
@@ -91,10 +98,9 @@ class Env
         static::setBool(static::SLIM_DISP_ERR_DETAILS, false);
         static::setBool(static::SLIM_LOG_ERR, true);
         static::setBool(static::SLIM_LOG_ERR_DETAILS, false);
-        static::setString(static::APP_CACHE_DIR, "{$workDir}/app-cache");
-        static::setString(static::TMPL_DIR, "{$baseDir}/templates");
         static::setString(static::SLIM_TMPL_DIR, "{$slimDir}/../templates");
         static::setString(static::TMPL_CACHE_DIR, "{$workDir}/templates");
+        static::setString(static::TMPL_DIR, "{$baseDir}/templates");
     }
 
 

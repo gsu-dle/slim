@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace GAState\Web\Slim;
 
 use GAState\Web\Slim\Env                                    as Env;
-use GAState\Web\Slim\SlimAppFactory                         as DefaultSlimAppFactory;
-use GAState\Web\Slim\SlimAppFactoryInterface                as SlimAppFactory;
+use GAState\Web\Slim\SlimAppFactory                         as DefaultAppFactory;
+use GAState\Web\Slim\SlimAppFactoryInterface                as AppFactory;
 use GAState\Web\Slim\Cache\AppCacheFactoryInterface         as AppCacheFactory;
 use GAState\Web\Slim\Cache\FileAppCacheFactory              as DefaultAppCacheFactory;
 use GAState\Web\Slim\Emitter\LaminasResponseEmitter         as DefaultResponseEmitter;
 use GAState\Web\Slim\Emitter\ResponseEmitterInterface       as ResponseEmitter;
 use GAState\Web\Slim\Error\ErrorHandler                     as DefaultErrorHandler;
-use GAState\Web\Slim\Error\ShutdownHandler                  as DefaultShutdownHandler;
+use GAState\Web\Slim\Error\ShutdownHandler                  as ShutdownHandler;
 use GAState\Web\Slim\Log\LoggerFactoryInterface             as LoggerFactory;
 use GAState\Web\Slim\Log\FileLoggerFactory                  as DefaultLoggerFactory;
 use GAState\Web\Slim\Middleware\ErrorMiddleware             as DefaultErrorMiddleware;
@@ -48,92 +48,110 @@ use Laminas\Diactoros\ServerRequestFactory                  as LaminasServerRequ
 use Laminas\Diactoros\StreamFactory                         as LaminasStreamFactory;
 use Laminas\Diactoros\UploadedFileFactory                   as LaminasUploadedFileFactory;
 use Laminas\Diactoros\UriFactory                            as LaminasUriFactory;
+use PDO;
 
 return (function () {
-    $baseURI             = Env::getString(Env::BASE_URI);
-    $logName             = Env::getString(Env::LOG_NAME);
-    $logFile             = Env::getString(Env::LOG_FILE);
-    $logLevel            = Env::getString(Env::LOG_LEVEL);
-    $appCacheDir         = Env::getString(Env::APP_CACHE_DIR);
-    $displayErrorDetails = Env::getBool(Env::SLIM_DISP_ERR_DETAILS);
-    $logErrors           = Env::getBool(Env::SLIM_LOG_ERR);
-    $logErrorDetails     = Env::getBool(Env::SLIM_LOG_ERR_DETAILS);
-    $twigPaths           = [
-        Env::getString(Env::TMPL_DIR),
-        Env::getString(Env::SLIM_TMPL_DIR),
+    /**
+     * Environment variables
+     *
+     * @var array<string,mixed> $envVars
+     */
+    $envVars = [
+        'appCacheDir' => Env::getString(Env::APP_CACHE_DIR),
+        'appDir' => Env::getString(Env::APP_DIR),
+        'baseDir' => Env::getString(Env::BASE_DIR),
+        'baseURI' => Env::getString(Env::BASE_URI),
+        'logDir' => Env::getString(Env::LOG_DIR),
+        'logName' => Env::getString(Env::LOG_NAME),
+        'logFile' => Env::getString(Env::LOG_FILE),
+        'logLevel' => Env::getString(Env::LOG_LEVEL),
+        'pdoDSN' => Env::getString(Env::PDO_DSN),
+        'pdoOptions' => [
+            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        ],
+        'pdoPassword' => Env::getString(Env::PDO_PASSWORD),
+        'pdoUsername' => Env::getString(Env::PDO_USERNAME),
+        'serverOptions' => Env::getValues(Env::SERVER_PREFIX),
+        'sessionOptions' => array_change_key_case(Env::getValues(Env::SESSION_PREFIX)),
+        'slimDir' => Env::getString(Env::SLIM_DIR),
+        'slimDisplayErrorDetails' => Env::getBool(Env::SLIM_DISP_ERR_DETAILS),
+        'slimLogErrors' => Env::getBool(Env::SLIM_LOG_ERR),
+        'slimLogErrorDetails' => Env::getBool(Env::SLIM_LOG_ERR_DETAILS),
+        'slimTemplateDir' => Env::getString(Env::SLIM_TMPL_DIR),
+        'templateCacheDir' => Env::getString(Env::TMPL_CACHE_DIR),
+        'templateDir' => Env::getString(Env::TMPL_DIR),
+        'twigPaths' => [
+            \DI\get('templateDir'),
+            \DI\get('slimTemplateDir')
+        ],
+        'twigOptions' => array_merge(
+            ['cache' => \DI\get('templateCacheDir')],
+            array_change_key_case(Env::getValues(Env::TWIG_PREFIX))
+        ),
     ];
-    $twigSettings = array_change_key_case(
-        Env::getValues(
-            Env::TWIG_PREFIX,
-            [
-                'CACHE' => boolval(Env::get(Env::TMPL_CACHE_DIR, false))
-            ]
-        )
-    );
-    $sessionOptions = Env::getValues(Env::SESSION_PREFIX);
 
+    /**
+     * Application dependencies
+     *
+     * @var array<string,mixed> $appDeps
+     */
     $appDeps = [
-        AppCacheFactory::class      => \DI\get(DefaultAppCacheFactory::class),
-        AppSession::class           => \DI\get(DefaultAppSession::class),
-        DisplayErrorRenderer::class => \DI\get(DefaultDisplayErrorRenderer::class),
-        LoggerFactory::class        => \DI\get(DefaultLoggerFactory::class),
-        LogErrorRenderer::class     => \DI\get(DefaultLogErrorRenderer::class),
-        Renderer::class             => \DI\get(DefaultRenderer::class),
-        ResponseEmitter::class      => \DI\get(DefaultResponseEmitter::class),
-        GlobalRequestFactory::class => \DI\get(DefaultGlobalRequestFactory::class),
-        SlimAppFactory::class       => \DI\get(DefaultSlimAppFactory::class),
-
-        DefaultAppCacheFactory::class   => \DI\autowire()
-            ->constructorParameter('appCacheDir', $appCacheDir),
-        DefaultAppSession::class        => \DI\autowire()
-            ->constructorParameter('options', $sessionOptions)
+        AppCacheFactory::class => \DI\autowire(DefaultAppCacheFactory::class)
+            ->constructorParameter('appCacheDir', \DI\get('appCacheDir')),
+        AppFactory::class => \DI\autowire(DefaultAppFactory::class)
+            ->constructorParameter('baseURI', \DI\get('baseURI')),
+        AppSession::class => \DI\autowire(DefaultAppSession::class)
+            ->constructorParameter('options', \DI\get('sessionOptions'))
             ->constructorParameter('deferStart', true)
             ->constructorParameter('deferEnd', false),
-        DefaultErrorMiddleware::class   => \DI\autowire()
-            ->constructorParameter('displayErrorDetails', $displayErrorDetails)
-            ->constructorParameter('logErrors', $logErrors)
-            ->constructorParameter('logErrorDetails', $logErrorDetails),
-        DefaultLoggerFactory::class     => \DI\autowire()
-            ->constructorParameter('logName', $logName)
-            ->constructorParameter('logFile', $logFile)
-            ->constructorParameter('logLevel', $logLevel),
-        DefaultShutdownHandler::class   => \DI\autowire()
-            ->constructorParameter('displayErrorDetails', $displayErrorDetails)
-            ->constructorParameter('logErrors', $logErrors)
-            ->constructorParameter('logErrorDetails', $logErrorDetails),
-        DefaultSlimAppFactory::class    => \DI\autowire()
-            ->constructorParameter('baseURI', $baseURI),
-        DefaultTwigFactory::class       => \DI\autowire()
-            ->constructorParameter('paths', $twigPaths)
-            ->constructorParameter('settings', $twigSettings),
-    ];
-
-    $psrDeps = [
-        PsrCache::class                => \DI\factory([AppCacheFactory::class, 'createAppCache'])
+        DefaultErrorMiddleware::class => \DI\autowire()
+            ->constructorParameter('displayErrorDetails', \DI\get('slimDisplayErrorDetails'))
+            ->constructorParameter('logErrors', \DI\get('slimLogErrors'))
+            ->constructorParameter('logErrorDetails', \DI\get('slimLogErrorDetails')),
+        DefaultTwigFactory::class => \DI\autowire()
+            ->constructorParameter('paths', \DI\get('twigPaths'))
+            ->constructorParameter('settings', \DI\get('twigOptions')),
+        DisplayErrorRenderer::class => \DI\get(DefaultDisplayErrorRenderer::class),
+        GlobalRequestFactory::class => \DI\get(DefaultGlobalRequestFactory::class),
+        LogErrorRenderer::class => \DI\get(DefaultLogErrorRenderer::class),
+        LoggerFactory::class => \DI\autowire(DefaultLoggerFactory::class)
+            ->constructorParameter('logName', \DI\get('logName'))
+            ->constructorParameter('logFile', \DI\get('logFile'))
+            ->constructorParameter('logLevel', \DI\get('logLevel')),
+        PDO::class => \DI\autowire()
+            ->constructorParameter('dsn', \DI\get('pdoDSN'))
+            ->constructorParameter('username', \DI\get('pdoUsername'))
+            ->constructorParameter('password', \DI\get('pdoPassword'))
+            ->constructorParameter('options', \DI\get('pdoOptions')),
+        PsrCache::class => \DI\factory([AppCacheFactory::class, 'createAppCache'])
             ->parameter('namespace', '')
             ->parameter('defaultLifetime', 0),
-        PsrHttpClient::class           => \DI\get(GuzzleHttpClient::class),
-        PsrLogger::class               => \DI\factory([LoggerFactory::class, 'createLogger']),
-        PsrRequestFactory::class       => \DI\get(LaminasRequestFactory::class),
-        PsrResponseFactory::class      => \DI\get(LaminasResponseFactory::class),
-        PsrServerRequest::class        => \DI\factory([GlobalRequestFactory::class, 'createRequestFromGlobals'])
+        PsrHttpClient::class => \DI\get(GuzzleHttpClient::class),
+        PsrLogger::class => \DI\factory([LoggerFactory::class, 'createLogger']),
+        PsrRequestFactory::class => \DI\get(LaminasRequestFactory::class),
+        PsrResponseFactory::class => \DI\get(LaminasResponseFactory::class),
+        PsrServerRequest::class => \DI\factory([GlobalRequestFactory::class, 'createRequestFromGlobals'])
             ->parameter('server', $_SERVER)
             ->parameter('query', $_GET)
             ->parameter('body', $_POST)
             ->parameter('cookies', $_COOKIE)
             ->parameter('files', $_FILES),
         PsrServerRequestFactory::class => \DI\get(LaminasServerRequestFactory::class),
-        PsrStreamFactory::class        => \DI\get(LaminasStreamFactory::class),
-        PsrUploadedFileFactory::class  => \DI\get(LaminasUploadedFileFactory::class),
-        PsrUriFactory::class           => \DI\get(LaminasUriFactory::class),
-    ];
-
-    $slimDeps = [
-        SlimErrorHandler::class    => \DI\get(DefaultErrorHandler::class),
+        PsrStreamFactory::class => \DI\get(LaminasStreamFactory::class),
+        PsrUploadedFileFactory::class => \DI\get(LaminasUploadedFileFactory::class),
+        PsrUriFactory::class => \DI\get(LaminasUriFactory::class),
+        Renderer::class => \DI\get(DefaultRenderer::class),
+        ResponseEmitter::class => \DI\get(DefaultResponseEmitter::class),
+        ShutdownHandler::class => \DI\autowire()
+            ->constructorParameter('displayErrorDetails', \DI\get('slimDisplayErrorDetails'))
+            ->constructorParameter('logErrors', \DI\get('slimLogErrors'))
+            ->constructorParameter('logErrorDetails', \DI\get('slimLogErrorDetails')),
+        SlimApp::class => \DI\factory([AppFactory::class, 'createSlimApp']),
+        SlimErrorHandler::class => \DI\get(DefaultErrorHandler::class),
         SlimErrorMiddleware::class => \DI\get(DefaultErrorMiddleware::class),
-        SlimApp::class             => \DI\factory([SlimAppFactory::class, 'createSlimApp']),
-        SlimTwigView::class        => \DI\factory([DefaultTwigFactory::class, 'create']),
+        SlimTwigView::class => \DI\factory([DefaultTwigFactory::class, 'create']),
     ];
 
-    return array_merge($appDeps, $psrDeps, $slimDeps);
+    return array_merge($envVars, $appDeps);
 })();
