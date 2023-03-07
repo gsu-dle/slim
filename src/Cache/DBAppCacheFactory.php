@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim\Cache;
 
+use Exception;
 use GAState\Web\Slim\Cache\AppCacheFactoryInterface as AppCacheFactory;
 use PDO                                             as PDO;
 use Psr\Cache\CacheItemPoolInterface                as Cache;
@@ -35,17 +36,26 @@ class DBAppCacheFactory implements AppCacheFactory
     /**
      * @param string $namespace
      * @param int $defaultLifetime
+     *
      * @return Cache
      */
     public function createAppCache(
         string $namespace = '',
         int $defaultLifetime = 0
     ): Cache {
-        return new PdoAdapter(
+        $adapter = new PdoAdapter(
             connOrDsn: $this->pdo,
             options: $this->options,
             namespace: $namespace,
             defaultLifetime: $defaultLifetime,
         );
+
+        // TODO: add logic to turn this off from .env
+        try {
+            $adapter->createTable();
+        } catch (Exception) {
+        }
+
+        return $adapter;
     }
 }
