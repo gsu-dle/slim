@@ -48,5 +48,11 @@ class ErrorHandler extends SlimErrorHandler
         } else {
             $this->logger->error($error);
         }
+
+        $prev = $this->exception->getPrevious();
+        if ($prev !== null) {
+            $this->exception = $prev;
+            $this->writeToErrorLog();
+        }
     }
 }
