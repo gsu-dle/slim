@@ -12,6 +12,7 @@ use GAState\Web\Slim\Middleware\SessionMiddleware     as SessionMiddleware;
 use Psr\Http\Message\ServerRequestInterface           as Request;
 use Psr\Http\Message\ResponseInterface                as Response;
 use Psr\Http\Server\MiddlewareInterface               as Middleware;
+use RuntimeException                                  as RuntimeException;
 use Slim\App                                          as SlimApp;
 use Slim\Interfaces\RouteCollectorProxyInterface      as SlimRouteContainer;
 use Slim\Middleware\BodyParsingMiddleware             as SlimBodyParsingMiddleware;
@@ -59,10 +60,8 @@ abstract class App
     /**
      * @return void
      */
-    public function run(): void
+    public function init(): void
     {
-        ob_start();
-
         $this->registerShutdownFunction($this->shutdownHandler);
 
         $this->loadMiddleware([
@@ -74,14 +73,29 @@ abstract class App
         ]);
 
         $this->loadRoutes($this->slimApp);
+    }
+
+
+    /**
+     * @return void
+     */
+    public function run(): void
+    {
+        $ob_level = ob_get_level();
+
+        if (!ob_start()) {
+            throw new RuntimeException('Unable to start output buffer');
+        }
 
         $response = $this->handle($this->request);
 
-        ob_clean();
+        while (ob_get_level() > $ob_level) {
+            if (!ob_end_clean()) {
+                throw new RuntimeException('Unable to end output buffer');
+            }
+        }
 
         $this->emit($response);
-
-        ob_end_flush();
     }
 
 
@@ -137,6 +151,22 @@ abstract class App
      */
     protected function emit(Response $response): void
     {
+        if (!ob_start()) {
+            throw new RuntimeException('Unable to start output buffer');
+        }
+
+        $ob_level = ob_get_level();
+
         $this->responseEmitter->emit($response);
+
+        while (ob_get_level() > $ob_level) {
+            if (!ob_end_clean()) {
+                throw new RuntimeException('Unable to end output buffer');
+            }
+        }
+
+        if (!ob_end_flush()) {
+            throw new RuntimeException('Unable to flush output buffer');
+        }
     }
 }
