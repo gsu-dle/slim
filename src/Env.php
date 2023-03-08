@@ -59,19 +59,19 @@ class Env
             throw new RuntimeException("Invalid base directory: '{$baseDir}'");
         }
 
-        (Dotenv::createImmutable($baseDir))->load();
-
-        $server = static::getValues(static::SERVER_PREFIX);
-        foreach ($server as $name => $value) {
-            $_SERVER[$name] = $value;
-        }
-
         if (substr($baseURI, -1, 1) === '/') {
             $baseURI = substr($baseURI, 0, -1);
         }
 
         static::setString(static::BASE_DIR, $baseDir);
         static::setString(static::BASE_URI, $baseURI);
+
+        (Dotenv::createImmutable($baseDir))->load();
+
+        $server = static::getValues(static::SERVER_PREFIX);
+        foreach ($server as $name => $value) {
+            $_SERVER[$name] = $value;
+        }
 
         static::setDefaults();
 
