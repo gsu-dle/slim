@@ -74,7 +74,7 @@ class DBLogHandler extends AbstractProcessingHandler
      */
     public function __construct(
         ?PDO $pdo = null,
-        string $table,
+        string $table = '',
         array $additionalFields = [],
         bool $skipDatabaseModifications = false,
         int|string|Level $level = Logger::DEBUG,
@@ -167,10 +167,10 @@ class DBLogHandler extends AbstractProcessingHandler
         $columns = "";
         $fields = "";
         foreach ($this->fields as $key => $f) {
-            if ($f == 'id') {
+            if ($f === 'id') {
                 continue;
             }
-            if ($key == 1) {
+            if ($key === 1) {
                 $columns .= "$f";
                 $fields .= ":$f";
                 continue;

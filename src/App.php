@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GAState\Web\Slim;
 
+use Psr\Container\ContainerInterface;
 use DI\Attribute\Inject                               as Inject;
 use GAState\Web\Slim\Emitter\ResponseEmitterInterface as ResponseEmitter;
 use GAState\Web\Slim\Error\ShutdownHandler            as ShutdownHandler;
@@ -21,25 +22,26 @@ use Slim\Middleware\RoutingMiddleware                 as SlimRoutingMiddleware;
 
 abstract class App
 {
+    /** @var SlimApp<ContainerInterface> $slimApp */
     private SlimApp $slimApp;
     private ShutdownHandler $shutdownHandler;
     private Request $request;
     private ResponseEmitter $responseEmitter;
 
     #[Inject]
-    private ?SlimRoutingMiddleware $routingMiddleware = null;
+    protected ?SlimRoutingMiddleware $routingMiddleware = null;
     #[Inject]
-    private ?SlimBodyParsingMiddleware $bodyParsingMiddleware = null;
+    protected ?SlimBodyParsingMiddleware $bodyParsingMiddleware = null;
     #[Inject]
-    private ?SlimContentLengthMiddleware $contentLengthMiddleware = null;
+    protected ?SlimContentLengthMiddleware $contentLengthMiddleware = null;
     #[Inject]
-    private ?ErrorMiddleware $errorMiddleware = null;
+    protected ?ErrorMiddleware $errorMiddleware = null;
     #[Inject]
-    private ?SessionMiddleware $sessionMiddleware = null;
+    protected ?SessionMiddleware $sessionMiddleware = null;
 
 
     /**
-     * @param SlimApp $slimApp
+     * @param SlimApp<ContainerInterface> $slimApp
      * @param ShutdownHandler $shutdownHandler
      * @param Request $request
      * @param ResponseEmitter $responseEmitter
@@ -126,7 +128,7 @@ abstract class App
 
 
     /**
-     * @param SlimRouteContainer $routes
+     * @param SlimRouteContainer<ContainerInterface> $routes
      *
      * @return void
      */

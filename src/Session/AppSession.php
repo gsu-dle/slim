@@ -170,7 +170,11 @@ class AppSession implements AppSessionInterface
 
         $defaultOptions = $data['defaultOptions'] ?? null;
         if (is_array($defaultOptions)) {
-            $this->defaultOptions = $defaultOptions;
+            $this->defaultOptions = array_filter(
+                $defaultOptions,
+                fn($value, $key) => is_string($key),
+                ARRAY_FILTER_USE_BOTH
+            );
         }
 
         $options = $data['options'] ?? null;
@@ -186,7 +190,7 @@ class AppSession implements AppSessionInterface
 
 
     /**
-     * @return int
+     * @return int<0,max>
      */
     public function count(): int
     {

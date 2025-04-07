@@ -83,7 +83,7 @@ interface AppSessionInterface extends ArrayAccess, Countable, IteratorAggregate
 
 
     /**
-     * @return int
+     * @return int<0,max>
      */
     public function count(): int;
 }

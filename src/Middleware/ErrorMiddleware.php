@@ -37,31 +37,31 @@ class ErrorMiddleware extends SlimErrorMiddleware
 
     /** @var SlimErrorHandler|callable|string|null */
     #[Inject(BadRequestHandler::class)]
-    private $badRequestHandler = null;
+    protected $badRequestHandler = null;
 
     /** @var SlimErrorHandler|callable|string|null */
     #[Inject(ForbiddenHandler::class)]
-    private $forbiddenHandler = null;
+    protected $forbiddenHandler = null;
 
     /** @var SlimErrorHandler|callable|string|null */
     #[Inject(InternalServerErrorHandler::class)]
-    private $internalServerErrorHandler = null;
+    protected $internalServerErrorHandler = null;
 
     /** @var SlimErrorHandler|callable|string|null */
     #[Inject(MethodNotAllowedHandler::class)]
-    private $methodNotAllowedHandler = null;
+    protected $methodNotAllowedHandler = null;
 
     /** @var SlimErrorHandler|callable|string|null */
     #[Inject(NotFoundHandler::class)]
-    private $notFoundHandler = null;
+    protected $notFoundHandler = null;
 
     /** @var SlimErrorHandler|callable|string|null */
     #[Inject(NotImplementedHandler::class)]
-    private $notImplementedHandler = null;
+    protected $notImplementedHandler = null;
 
     /** @var SlimErrorHandler|callable|string|null */
     #[Inject(UnauthorizedHandler::class)]
-    private $unauthorizedHandler = null;
+    protected $unauthorizedHandler = null;
 
 
     /**

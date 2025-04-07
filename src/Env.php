@@ -157,7 +157,8 @@ class Env
      */
     public static function getString(string $name, string $default = ''): string
     {
-        return strval(static::get($name, $default));
+        $value = static::get($name, $default);
+        return strval(is_scalar($value) ? $value : '');
     }
 
 
@@ -169,7 +170,8 @@ class Env
      */
     public static function getInt(string $name, int $default = 0): int
     {
-        return intval(static::get($name, $default));
+        $value = static::get($name, $default);
+        return intval(is_scalar($value) ? $value : 0);
     }
 
 
@@ -188,9 +190,9 @@ class Env
 
     /**
      * @param string $prefix
-     * @param array<string,string|int|bool> $values
+     * @param array<string,int|float|string|bool> $values
      *
-     * @return array<string,string|int|bool>
+     * @return array<string,int|float|string|bool>
      */
     public static function getValues(string $prefix, array $values = []): array
     {
@@ -200,7 +202,7 @@ class Env
 
         foreach ($_ENV as $name => $value) {
             $name = strtoupper($name);
-            if (str_starts_with($name, $prefix)) {
+            if (str_starts_with($name, $prefix) && is_scalar($value)) {
                 $values[strtolower(substr($name, strlen($prefix)))] = $value;
             }
         }

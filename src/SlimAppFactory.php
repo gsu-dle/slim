@@ -6,6 +6,7 @@ namespace GAState\Web\Slim;
 
 use DI\Bridge\Slim\Bridge                   as DISlimBridge;
 use DI\Container                            as DIContainer;
+use Psr\Container\ContainerInterface;
 use Slim\App                                as SlimApp;
 use Slim\Interfaces\RouteCollectorInterface as SlimRouteCollectorInterface;
 use Slim\Interfaces\RouteParserInterface    as SlimRouteParserInterface;
@@ -31,7 +32,7 @@ class SlimAppFactory implements SlimAppFactoryInterface
 
 
     /**
-     * @return SlimApp
+     * @return SlimApp<ContainerInterface>
      */
     public function createSlimApp(): SlimApp
     {
